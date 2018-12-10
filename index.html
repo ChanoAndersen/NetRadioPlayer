@@ -94,9 +94,9 @@
 				} );
 
 				radioplayer.on( 'timeupdate', function( event ) {
-					var currentTime = $( '#' + event.target.id ).prop( 'currentTime' );
-					var sek = Math.round( currentTime % 60 );
-					var min = Math.floor( currentTime / 60 );
+					let currentTime = $( '#' + event.target.id ).prop( 'currentTime' );
+					let sek = Math.round( currentTime % 60 );
+					let min = Math.floor( currentTime / 60 );
 					$( '#playbacktime' )[ 0 ].innerText = min + ':' + (sek < 10 ? '0' + sek : sek);
 				} );
 
