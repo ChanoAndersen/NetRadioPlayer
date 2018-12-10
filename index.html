@@ -11,6 +11,9 @@
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
 		  integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
+	<!-- Material Design icons, maybe useful for volume visualisation -->
+	<!--<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
+
 	<link href="css/custom.css" rel="stylesheet" />
 
 	<title>Netradio</title>
@@ -25,16 +28,17 @@
 
 				<ul class="nav flex-column">
 
-					<li class="nav-item" id="classicFM"></li>
-					<li class="nav-item" id="ClassicXmas"></li>
-					<li class="nav-item" id="DRP3"></li>
-					<li class="nav-item" id="Nova"></li>
-					<li class="nav-item" id="PopFM"></li>
-					<li class="nav-item" id="Radio100"></li>
-					<li class="nav-item" id="RadioSoft"></li>
-					<li class="nav-item" id="RadioVLR"></li>
-					<li class="nav-item" id="SkalaFM"></li>
-					<li class="nav-item" id="SkalaXmas"></li>
+					<li class="nav-item" data-url="http://webradio.classicfm.dk/classicfyn" id="classicFM"></li>
+					<li class="nav-item" data-url="http://webradio.classicfm.dk/xmasfyn" id="ClassicXmas"></li>
+					<li class="nav-item" data-url="http://webradio.skala.fm/odense" id="SkalaFM"></li>
+					<li class="nav-item" data-url="http://webradio.skala.fm/stream1" id="SkalaXmas"></li>
+					<li class="nav-item" data-url="http://webradio.skala.fm/vlrfyn" id="RadioVLR"></li>
+					<li class="nav-item" data-url="http://stream.novafm.dk/nova128" id="Nova"></li>
+					<li class="nav-item" data-url="http://stream.popfm.dk/pop128" id="PopFM"></li>
+					<li class="nav-item" data-url="http://onair.100fmlive.dk/100fm_live.mp3" id="Radio100"></li>
+					<li class="nav-item" data-url="http://edge-bauerdk-02-gos1.sharp-stream.com/radiosoft_dk_mp3?"
+						id="RadioSoft"></li>
+					<li class="nav-item" data-url="http://live-icy.gslb01.dr.dk:80/A/A05H.mp3" id="DRP3"></li>
 
 				</ul>
 
@@ -48,15 +52,16 @@
 		<div class="d-flex flex-row justify-content-between no-gutters" id="player">
 
 			<div class="col-1" id="controls">
-				&nbsp;<i class="fas fa-play"></i> <i class="fas fa-stop"></i>
+				&nbsp;<i class="fas fa-play text-secondary" id="playbackButton"></i> <span id="playbacktime">-:--</span>
 			</div>
 			<div class="col-1" id="volume">
-				<input type="range" class="custom-range" min="0" max="100" step="0.01" id="volumelevel">
+				<label for="volumelevel"></label>
+				<input type="range" class="custom-range" value="0.5" min="0" max="1" step="0.001" id="volumelevel">
 			</div>
-
 
 		</div>
 	</div>
+	<audio id="radioPlayer" autoplay preload="none"></audio>
 
 
 	<!-- Optional JavaScript -->
@@ -73,18 +78,64 @@
 	<script>
 
 		function selectStation( sender, event ) {
-			console.log( 'Clicked station: ' + event.target.id );
 			$( '#nowplayinglogo' ).css( 'background-image', 'url("images/stations/' + event.target.id + '/NowPlayingLogo.png")' );
-
+			$( '#radioPlayer' ).attr( 'src', $( '#' + event.target.id ).data( 'url' ) );
 		}
 
 		$( document ).ready(
 			function() {
+
+				let radioplayer = $( '#radioPlayer' );
+				let volumelevel = $( '#volumelevel' );
+				let playbackbutton = $( '#playbackButton' );
+
 				$( '#stationpicker ul' ).on( "click", "li", function( event ) {
 					selectStation( $( this ), event );
 				} );
-			}
-		)
+
+				radioplayer.on( 'timeupdate', function( event ) {
+					var currentTime = $( '#' + event.target.id ).prop( 'currentTime' );
+					var sek = Math.round( currentTime % 60 );
+					var min = Math.floor( currentTime / 60 );
+					$( '#playbacktime' )[ 0 ].innerText = min + ':' + (sek < 10 ? '0' + sek : sek);
+				} );
+
+				radioplayer.on( 'playing', function() {
+					playbackbutton.removeClass( 'fa-spin fa-sync fa-play' );
+					playbackbutton.addClass( 'fa-pause' );
+
+				} );
+
+				radioplayer.on( 'pause', function() {
+					playbackbutton.removeClass( 'fa-spin fa-pause' );
+					playbackbutton.addClass( 'fa-play' );
+
+				} );
+
+				radioplayer.on( 'loadstart', function() {
+					playbackbutton.removeClass( 'text-secondary fa-play fa-pause' );
+					playbackbutton.addClass( 'fa-spin fa-sync' );
+					$( '#playbacktime' )[ 0 ].innerText = "-:--";
+				} );
+
+				radioplayer.on( 'waiting', function() {
+					playbackbutton.removeClass( 'text-secondary fa-play fa-pause' );
+					playbackbutton.addClass( 'fa-spin fa-sync' );
+				} );
+
+				playbackbutton.click( function() {
+					radioplayer[ 0 ].paused ? radioplayer[ 0 ].play() : radioplayer[ 0 ].pause();
+
+				} );
+
+				volumelevel.on( 'input', function() {
+					radioplayer.prop( 'volume', $( this ).val() );
+				} );
+
+				volumelevel.val( radioplayer.prop( 'volume' ) );
+
+			} );
+
 
 	</script>
 
